@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, Column, Integer, String, DateTime
+from sqlalchemy import ForeignKey, Column, Integer, String, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -46,6 +46,7 @@ class News(Base):
     site_id = Column(Integer, ForeignKey('site.id'))
     summarized_content = Column(String)
     old_id = Column(Integer)
+    is_read = Column(Boolean)
 
     # Определение связи с таблицей Category
     # category = relationship('Category', back_populates='news')

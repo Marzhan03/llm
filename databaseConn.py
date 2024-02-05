@@ -47,3 +47,5 @@ class DAL:
             records = self.cursor.fetchone()  
         self.connection.commit()
         return records
+    
+  

@@ -25,8 +25,8 @@ metadata = sqlalchemy.MetaData()
 # Base.metadata.create_all(bind=async_engine)
 
 # Создаем сессию для взаимодействия с базой данных
-SessionLocal = sessionmaker(async_engine,class_ = AsyncSession, autocommit=False, autoflush=False)
-session = SessionLocal
+# SessionLocal = sessionmaker(async_engine,class_ = AsyncSession, autocommit=False, autoflush=False)
+# session = SessionLocal
 # news = sqlalchemy.Table(
 #     "news",
 #     metadata,
@@ -41,3 +41,10 @@ session = SessionLocal
 #     Column("summarized_content", String)
 # )
 
+async_session = sessionmaker(
+    async_engine, class_=AsyncSession, expire_on_commit=False
+)
+
+async def get_session() -> AsyncSession:
+    async with async_session() as session:
+        yield session

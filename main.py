@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi import Depends
 import DAL, data_accessor
 from request_worker import RequestWorker
 import schedule
@@ -10,19 +11,20 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from generate import generation_config
 from prompts.request_prompt import PROMPT
 import DAL
+from sqlalchemy.ext.asyncio import AsyncSession
 
-# dal = DAL()
+
 app = FastAPI()
 # generated_text = generation_config.openchat_generate(PROMPT)
 # print("DDD:", generated_text)
-open_chat_model = generation_config.OpenChatModel()
+# open_chat_model = generation_config.OpenChatModel()
 
-@app.get("/news/{news_id}")
-async def get_news(news_id: int):
-    await DAL.database.connect()
-    result = await data_accessor.get_all_news()
-    await DAL.database.disconnect()
-    return result
+# @app.get("/news/{news_id}")
+# async def get_news(news_id: int):
+#     await DAL.database.connect()
+#     result = await data_accessor.get_all_news()
+#     await DAL.database.disconnect()
+#     return result
 
 request_worker = RequestWorker()
 async def parse_news():
@@ -37,8 +39,8 @@ async def parse_news():
         location_id = news_object.get("location_id")
         site_id = news_object.get("site_id")
         summarized_content = open_chat_model.summarize_text(content)
-
-        print("DDDDDDD;", summarized_content)
+        summarized_content = summarized_content.split("GPT4 Correct Assistant:", 1)[-1].strip()
+        print("fdgFDGFD",summarized_content)
 
         await data_accessor.add_news(
             title,
@@ -55,11 +57,26 @@ async def parse_news():
 
 test_list = ["1"] * 10
 
+@app.get("/news/")
+async def get_news(session: AsyncSession = Depends(DAL.get_session)):
+    await DAL.database.connect()
+    result = await data_accessor.get_all_news(session)
+    await DAL.database.disconnect()
+    print(result)
+    return result
+
+# async def test():
+#     await DAL.database.connect()
+#     result = await data_accessor.get_all_news()
+#     await DAL.database.disconnect()
+#     print(result)
+#     return result
+
 @app.on_event('startup')
 def init_data():
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(parse_news, 'cron', second='*/5')
-    scheduler.start()
+    # scheduler.add_job(parse_news, 'cron', second='*/5')
+    # scheduler.start()
 
 def graceful_shutdown(signum, frame):
     sys.exit(0)
